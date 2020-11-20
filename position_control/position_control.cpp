@@ -51,6 +51,7 @@ void gait(struct LegIdentifier legs[],
     struct GaitParams paramsR = params;
     struct GaitParams paramsL = params;
     paramsR.step_length -= params.step_diff;
+    paramsL.step_length += params.step_diff;
 
     float t = time_ms/1000.0;
 
@@ -100,7 +101,7 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
 
     float gp = fmod((p+gaitOffset),1.0); // mod(a,m) returns remainder division of a by m
     if (gp <= flightPercent) {
-        x = (gp/flightPercent)*stepLength - stepLength/2.0;
+        x = ((gp/flightPercent)*stepLength) - stepLength/2.0;
         y = -upAMP*sin(PI*gp/flightPercent) + stanceHeight;
     }
     else {
@@ -108,6 +109,8 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
         x = -percentBack*stepLength + stepLength/2.0;
         y = downAMP*sin(PI*percentBack) + stanceHeight;
     }
+
+    
 }
 
 void CartesianToThetaGamma(float x, float y, float leg_direction, float& theta, float& gamma) {
@@ -122,7 +125,7 @@ void CartesianToThetaGamma(float x, float y, float leg_direction, float& theta, 
 */
 void CartesianToLegParams(float x, float y, float leg_direction, float& L, float& theta) {
     L = pow((pow(x,2.0) + pow(y,2.0)), 0.5);
-    theta = atan2(leg_direction * x, y);
+    theta = atan2(y, leg_direction * x);
 }
 
 /**
@@ -130,7 +133,7 @@ void CartesianToLegParams(float x, float y, float leg_direction, float& L, float
 */
 void GetGamma(float L, float theta, float& gamma) {
     float L1 = 0.095; // upper leg length (m)
-    float L2 = 0.161; // lower leg length (m)
+    float L2 = 0.16; // lower leg length (m)
     float cos_param = (pow(L1,2.0) + pow(L,2.0) - pow(L2,2.0)) / (2.0*L1*L);
     if (cos_param < -1.0) {
         gamma = PI;

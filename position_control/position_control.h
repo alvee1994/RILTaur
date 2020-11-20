@@ -39,12 +39,12 @@ enum States {
 extern States state;
 
 struct GaitParams {
-    float stance_height = 0.18; // Desired height of body from ground during walking (m)
+    float stance_height = 0.0; // Desired height of body from ground during walking (m)
     float down_amp = 0.00; // Peak amplitude below stanceHeight in sinusoidal trajectory (m)
-    float up_amp = 0.06; // Height the foot peaks at above the stanceHeight in sinusoidal trajectory (m)
-    float flight_percent = 0.6; // Portion of the gait time should be doing the down portion of trajectory
+    float up_amp = 0.00; // Height the foot peaks at above the stanceHeight in sinusoidal trajectory (m)
+    float flight_percent = 0.0; // Portion of the gait time should be doing the down portion of trajectory
     float step_length = 0.0; // Length of entire step (m)
-    float freq = 1.0; // Frequency of one gait cycle (Hz)
+    float freq = 0.0; // Frequency of one gait cycle (Hz)
     float step_diff = 0.0; //difference between left and right leg step length
 };
 

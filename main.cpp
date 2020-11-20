@@ -25,18 +25,19 @@ Timer t;
 
 
 void postion_16bit(struct LegIdentifier legs[]){
+    float offset = 0.122;
     float alpha = legs[0].theta + legs[0].gamma; 
     float beta = legs[0].theta - legs[0].gamma;
 
-    printf(" theta %f, gamma %f\n",  legs[0].theta, legs[0].gamma);
+    // printf(" theta %f, gamma %f\n",  legs[0].theta, legs[0].gamma);
 
     int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
     int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
 
     
-    transmit(can_one, legs[0].motorA, motorA_pos, 2047, 10, 250, 2047);
+    transmit(can_one, legs[0].motorA, motorA_pos, 2047, 30, 250, 2047);
     receive(can_one);
-    transmit(can_one, legs[0].motorB, motorB_pos, 2047, 10, 250, 2047);
+    transmit(can_one, legs[0].motorB, motorB_pos, 2047, 30, 250, 2047);
     receive(can_one);
 };
 
@@ -57,8 +58,8 @@ int main()
     // these are 13 different gait parameters for the 13 different things that the dogg should be able to do
     // we are starting with TROT only, the rest are unchanged from the original code and untested for RILtaur
     struct GaitParams state_gait_params[3] = {
-        //{s.h, d.a., u.a., f.p., s.l., fr., s.d.}
-        {0.18, 0.06, 0.08, 0.35, 0.4, 1.0, 0.0}, // TROT
+      //{s.h,  d.a., u.a., f.p., s.l., fr., s.d.}
+        {0.23, 0.02, 0.02, 0.35, 0.8, 0.4, 0.0}, // TROT
         {0.17, 0.04, 0.06, 0.35, 0.0, 2.0, 0.0}, // BOUND
         {0.15, 0.00, 0.06, 0.25, 0.0, 1.5, 0.0}, // WALK
     };
@@ -68,7 +69,7 @@ int main()
     // motor mode and zero position
     for (int i = 0; i<2; i++){
         send(can_one, leg0[i], leg_modes.motor_mode, 8);
-        send(can_one, leg0[i], leg_modes.zero_mode, 8);
+        // send(can_one, leg0[i], leg_modes.zero_mode, 8);
     }
 
 
