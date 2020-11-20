@@ -59,7 +59,7 @@ void transmit(CAN& can_interface, uint8_t can_id, int position, int velocity, in
 
     int p_int = (msg.data[0]<<8|msg.data[1]);
     // float p_float = uint_to_float(int (p_int), -95.0f, +95.0f, 16);
-    printf("pos is p_int %i\n", p_int);
+    // printf("pos is p_int %i\n", p_int);
 }
 
 int float_to_uint(float x, float x_min, float x_max, int bits){

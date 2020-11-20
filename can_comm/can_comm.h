@@ -30,8 +30,6 @@ struct LegModes{
 struct LegIdentifier{
     uint8_t motorA = 3;
     uint8_t motorB = 4;
-    float upperLeg = 0.12;
-    float lowerLeg = 0.1818;
     float theta = 0.0;
     float gamma = 0.0;
 };

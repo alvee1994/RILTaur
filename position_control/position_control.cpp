@@ -4,7 +4,7 @@
 // struct LegGain gait_gains = {80, 0.5, 50, 0.5};
 
 bool IsValidGaitParams(struct GaitParams params) {
-    const float maxL = 0.35;
+    const float maxL = 0.5;
     const float minL = 0.08;
 
     float stanceHeight = params.stance_height;
@@ -129,8 +129,8 @@ void CartesianToLegParams(float x, float y, float leg_direction, float& L, float
 * Takes the leg parameters and returns the gamma angle (rad) of the legs
 */
 void GetGamma(float L, float theta, float& gamma) {
-    float L1 = 0.09; // upper leg length (m)
-    float L2 = 0.162; // lower leg length (m)
+    float L1 = 0.095; // upper leg length (m)
+    float L2 = 0.161; // lower leg length (m)
     float cos_param = (pow(L1,2.0) + pow(L,2.0) - pow(L2,2.0)) / (2.0*L1*L);
     if (cos_param < -1.0) {
         gamma = PI;
