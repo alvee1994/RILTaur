@@ -43,17 +43,17 @@ int main()
 
     struct LegIdentifier legs[4] = {
     //   mA, mB,             theta, gamma
-        {1, 2, -200.0 *1.22, 0.0, 0.0}, // leg0
-        {3, 4, -200.0 *1.22, 0.0, 0.0}, // leg0
-        {5, 6, -200.0 *1.22, 0.0, 0.0}, // leg0
-        {7, 8, -200.0 *1.22, 0.0, 0.0} // leg0
+        {4, 3, -650, 0.0, 0.0}, // leg0
+        {1, 2, -650, 0.0, 0.0}, // leg1
+        {8, 7, -615, 0.0, 0.0}, // leg2
+        {5, 6, -500, 0.0, 0.0} // leg3
     };
 
     // these are 13 different gait parameters for the 13 different things that the dogg should be able to do
     // we are starting with TROT only, the rest are unchanged from the original code and untested for RILtaur
     struct GaitParams state_gait_params[3] = {
       //{s.h,  d.a., u.a., f.p., s.l., fr., s.d.}
-        {0.22, 0.02, 0.02, 0.35, 0.15, 0.4, 0.0}, // TROT
+        {0.22, 0.02, 0.02, 0.35, 0.15, 1.0, 0.0}, // TROT
     };
 
     printf("started...\n");
