@@ -28,8 +28,9 @@ struct LegModes{
 
 // identifying each leg and their corresponding parameters
 struct LegIdentifier{
-    uint8_t motorA = 3;
-    uint8_t motorB = 4;
+    uint8_t motorA = 0;
+    uint8_t motorB = 0;
+    float tff = 0.0;
     float theta = 0.0;
     float gamma = 0.0;
 };

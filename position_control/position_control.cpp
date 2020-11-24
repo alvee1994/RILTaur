@@ -1,10 +1,11 @@
 #include "position_control.h"
+#include <cstdio>
 
 // untested and probably wont be used
 // struct LegGain gait_gains = {80, 0.5, 50, 0.5};
 
 bool IsValidGaitParams(struct GaitParams params) {
-    const float maxL = 0.5;
+    const float maxL = 0.255;
     const float minL = 0.08;
 
     float stanceHeight = params.stance_height;
@@ -109,7 +110,6 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
         x = -percentBack*stepLength + stepLength/2.0;
         y = downAMP*sin(PI*percentBack) + stanceHeight;
     }
-
     
 }
 
@@ -132,19 +132,15 @@ void CartesianToLegParams(float x, float y, float leg_direction, float& L, float
 * Takes the leg parameters and returns the gamma angle (rad) of the legs
 */
 void GetGamma(float L, float theta, float& gamma) {
-    float L1 = 0.095; // upper leg length (m)
+    float L1 = 0.09; // upper leg length (m)
     float L2 = 0.16; // lower leg length (m)
     float cos_param = (pow(L1,2.0) + pow(L,2.0) - pow(L2,2.0)) / (2.0*L1*L);
     if (cos_param < -1.0) {
         gamma = PI;
-        #ifdef DEBUG_HIGH
-        Serial.println("ERROR: L is too small to find valid alpha and beta!");
-        #endif
+        // printf("\nERROR: L is too small to find valid alpha and beta!");
       } else if (cos_param > 1.0) {
         gamma = 0;
-        #ifdef DEBUG_HIGH
-        Serial.println("ERROR: L is too large to find valid alpha and beta!");
-        #endif
+        // printf("\nERROR: L is too large to find valid alpha and beta!");
       } else {
         gamma = acos(cos_param);
       }
