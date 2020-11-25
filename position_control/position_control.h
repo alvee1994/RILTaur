@@ -62,6 +62,16 @@ struct MotorParams {
     int kd = 200; // 0-4095 
 };
 
+// identifying each leg and their corresponding parameters
+struct LegIdentifier{
+    int leg_direction = 0;
+    uint8_t motorA = 0;
+    uint8_t motorB = 0;
+    float tff = 0.0;
+    float theta = 0.0;
+    float gamma = 0.0;
+};
+
 
 extern struct MotorParams motor_params;
 // extern struct GaitParams state_gait_params[13];

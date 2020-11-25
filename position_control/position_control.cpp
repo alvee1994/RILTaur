@@ -5,7 +5,7 @@
 // struct LegGain gait_gains = {80, 0.5, 50, 0.5};
 
 bool IsValidGaitParams(struct GaitParams params) {
-    const float maxL = 0.255;
+    const float maxL = 0.35;
     const float minL = 0.08;
 
     float stanceHeight = params.stance_height;
@@ -56,19 +56,19 @@ void gait(struct LegIdentifier legs[],
 
     float t = time_ms/1000.0;
 
-    const float leg0_direction = -1.0;
+    const float leg0_direction = legs[0].leg_direction;
     CoupledMoveLeg(t, paramsL, leg0_offset, leg0_direction,
         legs[0].theta, legs[0].gamma);
 
-    const float leg1_direction = -1.0;
+    const float leg1_direction = legs[1].leg_direction;
     CoupledMoveLeg(t, paramsL, leg1_offset, leg1_direction,
         legs[1].theta, legs[1].gamma);
 
-    const float leg2_direction = 1.0;
+    const float leg2_direction = legs[2].leg_direction;
     CoupledMoveLeg(t, paramsR, leg2_offset, leg2_direction,
         legs[2].theta, legs[2].gamma);
 
-    const float leg3_direction = 1.0;
+    const float leg3_direction = legs[3].leg_direction;
     CoupledMoveLeg(t, paramsR, leg3_offset, leg3_direction,
         legs[3].theta, legs[3].gamma);
 }
@@ -110,6 +110,10 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
         x = -percentBack*stepLength + stepLength/2.0;
         y = downAMP*sin(PI*percentBack) + stanceHeight;
     }
+
+    // printf("%i,%i\n", int(x*1000), int(y*1000));
+    
+
     
 }
 
@@ -125,7 +129,7 @@ void CartesianToThetaGamma(float x, float y, float leg_direction, float& theta, 
 */
 void CartesianToLegParams(float x, float y, float leg_direction, float& L, float& theta) {
     L = pow((pow(x,2.0) + pow(y,2.0)), 0.5);
-    theta = atan2(y, leg_direction * x);
+    theta = atan2(leg_direction * x, y);
 }
 
 /**
@@ -137,10 +141,10 @@ void GetGamma(float L, float theta, float& gamma) {
     float cos_param = (pow(L1,2.0) + pow(L,2.0) - pow(L2,2.0)) / (2.0*L1*L);
     if (cos_param < -1.0) {
         gamma = PI;
-        // printf("\nERROR: L is too small to find valid alpha and beta!");
+        printf("\nERROR: L is too small to find valid alpha and beta!");
       } else if (cos_param > 1.0) {
         gamma = 0;
-        // printf("\nERROR: L is too large to find valid alpha and beta!");
+        printf("\nERROR: L is too large to find valid alpha and beta!");
       } else {
         gamma = acos(cos_param);
       }

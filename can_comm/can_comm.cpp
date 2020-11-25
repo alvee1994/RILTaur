@@ -1,5 +1,6 @@
 #include "can_comm.h"
 #include "CAN.h"
+#include <cstdint>
 // #include "mbed.h"
 
 void send(CAN& can_interface, uint8_t can_id, uint8_t cmsg[], int dlc) {
@@ -7,13 +8,14 @@ void send(CAN& can_interface, uint8_t can_id, uint8_t cmsg[], int dlc) {
     } 
 }
 
-void receive(CAN& can_interface){
+int receiveCAN(CAN& can_interface){
     int position;
     int velocity;
     int current;
     uint8_t ID;
     CANMessage msg;
-    
+    int unpacked[2];
+
     if(can_interface.read(msg)) {
         // printf("\nLength: %d\n", msg.len);
 
@@ -21,7 +23,14 @@ void receive(CAN& can_interface){
         position = msg.data[1] << 8 | msg.data[2];
         velocity = msg.data[3] << 4 | (msg.data[4] & 0xf0);
         current = (msg.data[4] & 0xf) << 8 | msg.data[5];
+        printf("%i, %i\n", ID, position);
+
+        return position;
+        // return unpacked;
+        // printf("\nID: %d, position: %d\n", ID, position);
         // printf("\nID: %d, position: %d, velocity: %d, current: %d\n", ID, position, velocity, current);
+    } else {
+        return -1;
     }
 }
 

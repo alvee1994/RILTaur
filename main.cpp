@@ -24,14 +24,28 @@ Timer t;
 
 void postion_16bit(struct LegIdentifier legs[]){
     for (int i = 0; i < 4; i++){
-        float alpha = legs[0].theta + legs[0].gamma; 
-        float beta = legs[0].theta - legs[0].gamma;
+        int received[2];
 
-        int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
-        int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
+        float alpha = legs[i].theta + legs[i].gamma; 
+        float beta = legs[i].theta - legs[i].gamma;
 
-        transmit(can_one, legs[0].motorA, motorA_pos, 2047, 30, 250, 2047);
-        transmit(can_one, legs[0].motorB, motorB_pos, 2047, 30, 250, 2047);
+        int motorA_pos = float_to_uint(int(alpha*1000)/1000, -95.5, 95.5, 16);
+        int motorB_pos = float_to_uint(int(beta*1000)/1000, -95.5, 95.5, 16);
+
+        int kp = 30;
+        int kd = 400;
+
+        transmit(can_one, legs[i].motorA, motorA_pos, 2047, kp, kd, 2047 - legs[i].tff);
+        // printf("motorA: %i, ", motorA_pos);
+        // int motorA_encoder = receiveCAN(can_one);
+        transmit(can_one, legs[i].motorB, motorB_pos, 2047, kp, kd, 2047 + legs[i].tff);
+        // printf("motorB: %i, ", motorB_pos);
+        // int motorB_encoder = receiveCAN(can_one);
+
+        // printf("%i, %i, %i, %i\n", motorA_pos, motorA_encoder, motorB_pos, motorB_encoder);
+        wait_us(8000);
+
+        
     }
 };
 
@@ -43,29 +57,35 @@ int main()
 
     struct LegIdentifier legs[4] = {
     //   mA, mB,             theta, gamma
-        {4, 3, -650, 0.0, 0.0}, // leg0
-        {1, 2, -650, 0.0, 0.0}, // leg1
-        {8, 7, -615, 0.0, 0.0}, // leg2
-        {5, 6, -500, 0.0, 0.0} // leg3
+
+        // left leg
+        {1, 4, 3, 200, 0.0, 0.0}, // leg0
+        {-1, 2, 1, 200, 0.0, 0.0}, // leg1
+
+        // right leg
+        {1, 7, 8, 200, 0.0, 0.0}, // leg2
+        {-1, 5, 6, 200, 0.0, 0.0} // leg3
     };
 
     // these are 13 different gait parameters for the 13 different things that the dogg should be able to do
     // we are starting with TROT only, the rest are unchanged from the original code and untested for RILtaur
     struct GaitParams state_gait_params[3] = {
       //{s.h,  d.a., u.a., f.p., s.l., fr., s.d.}
-        {0.22, 0.02, 0.02, 0.35, 0.15, 1.0, 0.0}, // TROT
+        {0.20, 0.05, 0.03, 0.6, 0.20, 0.8, 0.0}, // TROT
     };
 
     printf("started...\n");
 
     // motor mode and zero position
     for (int i = 0; i<4; i++){
+        // send(can_one, legs[i].motorA, leg_modes.zero_mode, 8);
+        // send(can_one, legs[i].motorB, leg_modes.zero_mode, 8);
+        wait_us(500000);
         send(can_one, legs[i].motorA, leg_modes.motor_mode, 8);
-        send(can_one, legs[i].motorA, leg_modes.zero_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.motor_mode, 8);
-        send(can_one, legs[i].motorB, leg_modes.zero_mode, 8);
-    }
 
+        printf("IDs are %i, %i\n", legs[i].motorA, legs[i].motorB);
+    }
 
     // send(can_one, 1, leg_modes.motor_mode, 8);
     // send(can_one, 1, leg_modes.zero_mode, 8);
