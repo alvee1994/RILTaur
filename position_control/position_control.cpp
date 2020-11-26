@@ -6,6 +6,47 @@
 // untested and probably wont be used
 // struct LegGain gait_gains = {80, 0.5, 50, 0.5};
 
+void postion_16bit(CAN& can_interface, struct LegIdentifier legs[], float delay){
+    for (int i = 0; i < 4; i++){
+        float alpha;
+        float beta;
+
+        if (i == 0 || i == 2) {
+            alpha = (legs[i].gamma - legs[i].theta) - PI/2.0; 
+            beta = (legs[i].gamma + legs[i].theta) - PI/2.0;
+        } else {
+            alpha = ((-1*legs[i].gamma) - legs[i].theta) + PI/2.0; 
+            beta = ((-1*legs[i].gamma) + legs[i].theta) + PI/2.0;
+        }
+
+
+        // alpha = (legs[i].gamma - legs[i].theta) - PI/2.0; 
+        // beta = (legs[i].gamma + legs[i].theta) - PI/2.0;
+
+        // alpha = (legs[i].gamma - legs[i].theta) - PI/2.0; 
+        // beta = (legs[i].gamma + legs[i].theta) - PI/2.0;
+        int received[2];
+
+
+
+
+        int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
+        int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
+
+        // int motorA_pos = float_to_uint(int(alpha*10)/10, -95.5, 95.5, 16);
+        // int motorB_pos = float_to_uint(int(beta*10)/10, -95.5, 95.5, 16);
+
+        int kp = 60;
+        int kd = 400;
+
+        transmit(can_interface, legs[i].motorA, motorA_pos, 2047, kp, kd, 2047 - legs[i].tff);
+        transmit(can_interface, legs[i].motorB, motorB_pos, 2047, kp, kd, 2047 + legs[i].tff);
+        
+        wait_us(delay * 1000);
+        
+    }
+};
+
 bool IsValidGaitParams(struct GaitParams params) {
     const float maxL = 0.35;
     const float minL = 0.08;
@@ -116,7 +157,8 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
         x = -percentBack*stepLength + stepLength/2.0;
         y = downAMP*sin(PI*percentBack) + stanceHeight;
     }
-    // printf("%i,%i\n", int(x*1000), int(y*1000));
+
+    printf("%i,%i\n", int(x*100), int(y*100));
     
 
     
@@ -142,7 +184,7 @@ void CartesianToLegParams(float x, float y, float leg_direction, float& L, float
 */
 void GetGamma(float L, float theta, float& gamma) {
     float L1 = 0.09; // upper leg length (m)
-    float L2 = 0.16; // lower leg length (m)
+    float L2 = 0.161; // lower leg length (m)
     float cos_param = (pow(L1,2.0) + pow(L,2.0) - pow(L2,2.0)) / (2.0*L1*L);
     if (cos_param < -1.0) {
         gamma = PI;
