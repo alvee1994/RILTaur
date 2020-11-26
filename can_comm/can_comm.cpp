@@ -23,7 +23,7 @@ int receiveCAN(CAN& can_interface){
         position = msg.data[1] << 8 | msg.data[2];
         velocity = msg.data[3] << 4 | (msg.data[4] & 0xf0);
         current = (msg.data[4] & 0xf) << 8 | msg.data[5];
-        printf("%i, %i\n", ID, position);
+        printf("%i, %f\n", ID, uint_to_float(position, -95.5, 95.5, 16));
 
         return position;
         // return unpacked;
@@ -58,15 +58,16 @@ void transmit(CAN& can_interface, uint8_t can_id, int position, int velocity, in
     msg.data[6] = (msg.data[6]|ff >> 8); // 4 bit by kp
     msg.data[7] = ff & 0xff; // 8 bit by kp
 
+    // printf("position %d\n", (msg.data[0]<<8|msg.data[1]));
+    // printf("velocity %d\n", (msg.data[2]<<4|msg.data[3]>>4));
+    // printf("kp %d\n", ((msg.data[3]&0xf)<<8|msg.data[4]));
+    // printf("kd %d\n", (msg.data[5]<<4|msg.data[6]>>4));
+    // printf("ff %d\n\n", ((msg.data[6]&0xf)<<8|msg.data[7]));
+
     send(can_interface, can_id, msg.data, 8);
 
-    // printf("position %d\n", (msg[0]<<8|msg[1]));
-    // printf("velocity %d\n", (msg[2]<<4|msg[3]>>4));
-    // printf("kp %d\n", ((msg[3]&0xf)<<8|msg[4]));
-    // printf("kd %d\n", (msg[5]<<4|msg[6]>>4));
-    // printf("ff %d\n\n", ((msg[6]&0xf)<<8|msg[7]));
 
-    int p_int = (msg.data[0]<<8|msg.data[1]);
+    // int p_int = (msg.data[0]<<8|msg.data[1]);
     // float p_float = uint_to_float(int (p_int), -95.0f, +95.0f, 16);
     // printf("pos is p_int %i\n", p_int);
 }

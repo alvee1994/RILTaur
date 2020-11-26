@@ -1,5 +1,7 @@
 #include "position_control.h"
+#include "mbed_wait_api.h"
 #include <cstdio>
+#include <iterator>
 
 // untested and probably wont be used
 // struct LegGain gait_gains = {80, 0.5, 50, 0.5};
@@ -71,6 +73,7 @@ void gait(struct LegIdentifier legs[],
     const float leg3_direction = legs[3].leg_direction;
     CoupledMoveLeg(t, paramsR, leg3_offset, leg3_direction,
         legs[3].theta, legs[3].gamma);
+    // wait_us(100000);
 }
 
 void CoupledMoveLeg(float t, struct GaitParams params,
@@ -97,7 +100,10 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
     float stepLength = params.step_length;
     float FREQ = params.freq;
 
+
+
     p += FREQ * (t - prev_t < 0.5 ? t - prev_t : 0); // should reduce the lurching when starting a new gait
+    // p += FREQ * (t - prev_t < 0.5 ? t - prev_t : 0); // should reduce the lurching when starting a new gait
     prev_t = t;
 
     float gp = fmod((p+gaitOffset),1.0); // mod(a,m) returns remainder division of a by m
@@ -110,7 +116,6 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
         x = -percentBack*stepLength + stepLength/2.0;
         y = downAMP*sin(PI*percentBack) + stanceHeight;
     }
-
     // printf("%i,%i\n", int(x*1000), int(y*1000));
     
 
