@@ -6,8 +6,12 @@
 
 #include "mbed.h"
 #include "math.h"
-#include "can_comm/can_comm.h"
+#include "mbed_wait_api.h"
+#include "CAN.h"
+#include "can_comm.h"
 
+void start_position_control(CAN& can_interface, struct LegIdentifier* legs);
+void position_control_func();
 void postion_16bit(CAN& can_interface, struct LegIdentifier legs[], float delay);
 void GetGamma(float L, float theta, float& gamma);
 void LegParamsToCartesian(float L, float theta, float& x, float& y);
@@ -19,7 +23,14 @@ bool IsValidGaitParams(struct GaitParams params);
 bool IsValidLegGain(struct LegGain gain);
 void SinTrajectoryPosControl();
 void gait(struct LegIdentifier legs[], struct GaitParams params, unsigned long long& time_ms, float leg0_offset, float leg1_offset, float leg2_offset, float leg3_offset);
-
+void TransitionToDance();
+void TransitionToWalk();
+void TransitionToTrot();
+void TransitionToTurnTrot();
+void TransitionToPronk();
+void TransitionToBound();
+void TransitionToRotate();
+void TransitionToHop();
 
 
 enum States {
@@ -34,7 +45,8 @@ enum States {
     TEST = 8,
     ROTATE = 9,
     FLIP = 10,
-    TURN_TROT = 11
+    TURN_TROT = 11,
+    RESET_ = 12
 };
 
 extern States state;
@@ -75,7 +87,7 @@ struct LegIdentifier{
 
 
 extern struct MotorParams motor_params;
-// extern struct GaitParams state_gait_params[13];
+extern struct GaitParams state_gait_params[13];
 extern struct LegGain gait_gains;
 
 #endif

@@ -3,6 +3,7 @@
 
 
 #include "mbed.h"
+#include "position_control.h"
 
 void start_serial_commands();
 void serial_commands_func();
