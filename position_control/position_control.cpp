@@ -167,7 +167,7 @@ void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay
         transmit(can_interface, legs_[i].motorA, motorA_pos, 2047, kp, kd, 2047 - legs_[i].tff);
         transmit(can_interface, legs_[i].motorB, motorB_pos, 2047, kp, kd, 2047 + legs_[i].tff);
         
-        wait_us(delay * 1000);
+        ThisThread::sleep_for(delay);
         
     }
 };
