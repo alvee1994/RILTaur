@@ -1,6 +1,6 @@
 #include "serial_commands.h"
 
-#if defined(USE_PC_SERIAL)
+#ifdef USE_PC_SERIAL
     #define SERIAL pc
 #else
     #define SERIAL s1
@@ -23,8 +23,8 @@ void serial_commands_func() {
     char msg[] = "!!!\n";
 
     while(true) {
-        while(SERIAL.readable()) {
-            SERIAL.read(c, sizeof(c));
+        while(pc.readable()) {
+            pc.read(c, sizeof(c));
             //pc.write(c, sizeof(c));
             if (*c == ';' || *c == '\r') {
                 cmd[pos] = '\0';
@@ -41,17 +41,23 @@ void InterpretCommand(char* cmd) {
     char c;
     char s;
     float f;
+    float initial_turn;
+    float final_turn;
     States temp_state = STOP;
     // Note: Putting a space in front of %c allows you type commands like:
     // f 2.0; l 0.01; h 0.08
-    int num_parsed = sscanf(cmd, " %c %c %f", &c, &s, &f);
+    // int num_parsed = sscanf(cmd, " %c %c %f", &c, &s, &f);
+    int num_parsed = sscanf(cmd, " %c %c %f %f %f", &c, &s, &initial_turn, &f, &final_turn);
     printf("%s", cmd);
     printf("\n");
-    printf("%c %c %f\n", c, s, f);
+    printf("%c %c %f %f %f\n", c, s, final_turn, f, initial_turn);
     if (num_parsed < 1) {
         printf("Invalid command\n");
         return;
     }
+
+    // the command is used in two switch..case statements 
+    // one to set state and another to set parameters
     switch(s) {
         // Change DANCE state params
         case 'E':
@@ -84,6 +90,9 @@ void InterpretCommand(char* cmd) {
         // Change FLIP state params
         case 'F':
             temp_state = FLIP;
+            break;
+        case 'L':
+            temp_state = WAYPOINT;
             break;
         default:
             printf("Invalid or non-modifiable state\n");
@@ -130,6 +139,12 @@ void InterpretCommand(char* cmd) {
         case 't':
             printf("Set state %d turn dir. to: %f\n", temp_state, f);
             break;
+        case 'x':
+            if (temp_state == WAYPOINT){
+                printf("For state %d \n\tturn %f degrees \n\t then go distance: %f \n\tand then turn: %f\n", temp_state, initial_turn, f, final_turn);
+                sp = {initial_turn, f, final_turn, false, false, false};
+            }
+            break;
         // Change leg gains
         // case 'g':
         //     { // Have to create a new scope here in order to declare variables
@@ -171,6 +186,11 @@ void InterpretCommand(char* cmd) {
             TransitionToTrot();
             printf("TROT\n");
             break;
+        // Switch into TROT state
+        case 'L':
+            TransitionToWaypoint();
+            printf("WAYPOINT\n");
+            break;            
         // Swith into TURN_TROT
         case 'Y':
             TransitionToTurnTrot();
@@ -215,12 +235,18 @@ void InterpretCommand(char* cmd) {
 }
 
 void PrintGaitCommands() {
-    printf("Available gait commands:\n");
-    printf("(f)req\n");
-    printf("step (l)ength\n");
-    printf("stance (h)eight\n");
-    printf("(d)own amplitude\n");
-    printf("(u)p amplitude\n");
-    printf("flight (p)roportion\n");
-    printf("(s)tep difference\n\n");
+    printf("\n\nAvailable gait parameters:\n\n");
+    printf("\tf for freq\n");
+    printf("\tl for stp length\n");
+    printf("\th for stance height\n");
+    printf("\td for down amplitude\n");
+    printf("\tu for up ampliude\n");
+    printf("\tp for flight proportion\n");
+    printf("\ts for step difference\n\n");
+
+    printf("Available gait states: \n\n\t(W)alk, (T)rot, (Y) Turn Trot, (L) Waypoint\n\n");
+    
+    printf("\tto change parameter of a gait send 'param' 'state' 'value'\n");
+    printf("\te.g. 'f T 0.9' to change frequency of Trot to 0.9\n");
+    printf("\tand 'state' e.g. 'T' for Trot and press enter\n\n\n");
 }

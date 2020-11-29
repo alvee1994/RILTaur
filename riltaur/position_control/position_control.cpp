@@ -10,7 +10,13 @@ Thread position_control_thread;
 /*----------------------------------------------------------------*/
 using namespace std::chrono;
 Timer t;
+Timer wt;
+
+static float p = 0;
+static float prev_t = 0;
+
 unsigned long long time_ms;
+unsigned long long waypoint_time = 0.0;
 CAN* can_comm;
 float tff = 0;
 extern struct LegModes leg_modes; // different modes of the motor
@@ -30,8 +36,17 @@ struct GaitParams state_gait_params[] = {
     {NAN, NAN, NAN, NAN, NAN, NAN, NAN}, // ROTATE
     {0.15, 0.07, 0.06, 0.2, 0.0, 1.0, 0.0}, // FLIP
     {0.18, 0.03, 0.03, 0.5, 0.15, 1.5, 0.06}, // TURN_TROT
-    {NAN, NAN, NAN, NAN, NAN, NAN, NAN} // RESET
+    {NAN, NAN, NAN, NAN, NAN, NAN, NAN}, // RESET
+    {0.16, 0.03, 0.03, 0.5, 0.15, 1.5, 0.0}, // WAYPOINT
 };
+
+struct Waypoints sp = {0.0, 0.0, 0.0};
+
+int right_turn[4] = {1, 1, 1, 1};
+int left_turn[4] = {-1, -1, -1, -1};
+int go_forward[4] = {1, 1, -1, -1};
+
+
 long rotate_start = 0; // milliseconds when rotate was commanded
 States state = STOP;
 int straight_dir = 1;
@@ -54,32 +69,7 @@ void position_control_func() {
         switch(state) {
             case STOP:
                 {
-                    LegGain stop_gain = {50, 0.5, 50, 0.5};
-                    float y1 = 0.15;
-                    float y2 = 0.15;
-
-                    int kp = 60;
-                    int kd = 400;
-
-                    for (int i=0; i < 4; i++) {
-                        CartesianToThetaGamma(0.0, y1, legs_[i].leg_direction, legs_[i].theta, legs_[i].gamma);
-                        transmit(*can_comm, legs_[i].motorA, 32767, 2047, kp, kd, 2047);
-                        transmit(*can_comm, legs_[i].motorB, 32767, 2047, kp, kd, 2047);
-                    }
-                    // CartesianToThetaGamma(0.0, y2, legs_[0].leg_direction, legs_[0].theta, legs_[0].gamma);
-                    // CartesianToThetaGamma(0.0, y1, legs_[1].leg_direction, legs_[1].theta, legs_[1].gamma);
-                    // CartesianToThetaGamma(0.0, y1, legs_[2].leg_direction, legs_[2].theta, legs_[2].gamma);
-                    // CartesianToThetaGamma(0.0, y2, legs_[3].leg_direction, legs_[3].theta, legs_[3].gamma);
-                    
-                    // postion_16bit(can_comm, legs_, 0.35);
-                    //transmit(can_comm, legs_[0].motorA, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[0].motorB, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[1].motorA, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[1].motorB, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[2].motorA, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[2].motorB, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[3].motorA, 32767, 2047, kp, kd, 2047);
-                    // transmit(can_comm, legs_[3].motorB, 32767, 2047, kp, kd, 2047);
+                    stop_state();
                 }
                 break;
             case DANCE:
@@ -89,9 +79,16 @@ void position_control_func() {
                 //gait(gait_params, 0.0, 0.5, 0.5, 0.0, gait_gains);
                 break;
             case TROT:
+                // printf("gait params %f\n", gait_params.freq);
                 gait(legs_, gait_params, time_ms, 0.0, 0.5, 0.0, 0.5);
                 postion_16bit(*can_comm, legs_, 0.35);
                 break;
+            case WAYPOINT:
+                waypoint_time = duration_cast<milliseconds>(wt.elapsed_time()).count();
+                gait(legs_, gait_params, waypoint_time, 0.0, 0.5, 0.0, 0.5);
+                postion_16bit(*can_comm, legs_, 0.35);
+                traverseCheck();
+                break;                
             case TURN_TROT:
                 gait(legs_, gait_params, time_ms, 0.0, 0.5, 0.0, 0.5);
                 postion_16bit(*can_comm, legs_, 0.35);
@@ -131,6 +128,35 @@ void position_control_func() {
     }
 }
 
+void stop_state(){
+    LegGain stop_gain = {50, 0.5, 50, 0.5};
+    float y1 = 0.15;
+    float y2 = 0.15;
+    int kp = 60;
+    int kd = 400;
+
+    for (int i=0; i < 4; i++) {
+        CartesianToThetaGamma(0.0, y1, legs_[i].leg_direction, legs_[i].theta, legs_[i].gamma);
+        transmit(*can_comm, legs_[i].motorA, 32767, 2047, kp, kd, 2047);
+        transmit(*can_comm, legs_[i].motorB, 32767, 2047, kp, kd, 2047);
+    }
+
+        // CartesianToThetaGamma(0.0, y2, legs_[0].leg_direction, legs_[0].theta, legs_[0].gamma);
+        // CartesianToThetaGamma(0.0, y1, legs_[1].leg_direction, legs_[1].theta, legs_[1].gamma);
+        // CartesianToThetaGamma(0.0, y1, legs_[2].leg_direction, legs_[2].theta, legs_[2].gamma);
+        // CartesianToThetaGamma(0.0, y2, legs_[3].leg_direction, legs_[3].theta, legs_[3].gamma);
+        
+        // postion_16bit(can_comm, legs_, 0.35);
+        //transmit(can_comm, legs_[0].motorA, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[0].motorB, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[1].motorA, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[1].motorB, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[2].motorA, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[2].motorB, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[3].motorA, 32767, 2047, kp, kd, 2047);
+        // transmit(can_comm, legs_[3].motorB, 32767, 2047, kp, kd, 2047);
+}
+
 void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay){
     for (int i = 0; i < 4; i++){
         float alpha;
@@ -144,22 +170,10 @@ void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay
             beta = ((-1*legs_[i].gamma) + legs_[i].theta) + PI/2.0;
         }
 
-
-        // alpha = (legs_[i].gamma - legs_[i].theta) - PI/2.0; 
-        // beta = (legs_[i].gamma + legs_[i].theta) - PI/2.0;
-
-        // alpha = (legs_[i].gamma - legs_[i].theta) - PI/2.0; 
-        // beta = (legs_[i].gamma + legs_[i].theta) - PI/2.0;
         int received[2];
-
-
-
 
         int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
         int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
-
-        // int motorA_pos = float_to_uint(int(alpha*10)/10, -95.5, 95.5, 16);
-        // int motorB_pos = float_to_uint(int(beta*10)/10, -95.5, 95.5, 16);
 
         int kp = 60;
         int kd = 400;
@@ -256,8 +270,7 @@ void CoupledMoveLeg(float t, struct GaitParams params,
 * Sinusoidal trajectory generator function with flexibility from parameters described below. Can do 4-beat, 2-beat, trotting, etc with this.
 */
 void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& x, float& y) {
-    static float p = 0;
-    static float prev_t = 0;
+
 
     float stanceHeight = params.stance_height;
     float downAMP = params.down_amp;
@@ -273,6 +286,7 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
     prev_t = t;
 
     float gp = fmod((p+gaitOffset),1.0); // mod(a,m) returns remainder division of a by m
+    // printf("gp is %f\n", gp);
     if (gp <= flightPercent) {
         x = ((gp/flightPercent)*stepLength) - stepLength/2.0;
         y = -upAMP*sin(PI*gp/flightPercent) + stanceHeight;
@@ -437,6 +451,7 @@ void TransitionToRotate() {
     printf("ROTATE\n");
     //gait_gains = {30,0.5,30,0.5};
 }
+
 void TransitionToHop() {
     state = HOP;
     printf("HOP\n");
@@ -444,4 +459,72 @@ void TransitionToHop() {
     //gait_params = {0.15, 0.05, 0.05, 0.2, 0, 1.0};
     // UpdateStateGaitParams(HOP);
     // PrintGaitParams();
+}
+
+void TransitionToWaypoint(){
+    resetTimeWP();
+    state = WAYPOINT;
+    printf("WAYPOINT\n");
+}
+
+void resetTimeWP(){
+    if (waypoint_time != 0.0){
+        wt.stop();
+        waypoint_time = 0.0;
+    }
+    p = 0;
+    prev_t = 0;
+    wt.start();
+}
+
+void traverseCheck(){
+    float first_turn, distance_travelled, second_turn;
+    float d = p*0.075;
+
+    
+    if (sp.x_turnt == false){ // this is the first turn if any
+        if(checkTurn(sp.x_angle, d)){
+            sp.x_turnt = true;
+            resetTimeWP();
+            wait_us(500000);
+        };
+    } else if (sp.distance_reached == false){ // distance to move if any
+        printf("going forward %f metres\n", d);
+        sp.distance_reached = (d >= sp.distance) ? true : false;
+        if (sp.distance_reached){
+            resetTimeWP();
+            wait_us(500000);
+        }
+    } else if (sp.y_turnt == false){ // last turn if any
+        if(checkTurn(sp.y_angle, d)){
+            sp.y_turnt = true;
+            resetTimeWP();
+            wait_us(500000);
+        };
+    } else {
+        changeLegDirection(go_forward);
+        state = STOP;
+    }
+}
+
+bool checkTurn(float sp_angle, float& dist){
+    if (sp_angle > 0.0){
+            changeLegDirection(right_turn);
+            printf("turning right. ");
+    } else {
+            changeLegDirection(left_turn);
+            printf("turning left. ");
+    } 
+    float turn = (dist*360)/(2 * PI * 0.1125);
+    printf("angle turnt is %f degrees\n", turn);
+    bool result = (turn >= abs(sp_angle)) ? true : false;
+    return result;
+}
+
+void changeLegDirection(int legDirection[4]){
+    for (int i = 0; i < 4; i++){
+        legs_[i].leg_direction = legDirection[i];
+        // printf("%i", legs_[i].leg_direction);
+    }
+    // printf("\n");
 }

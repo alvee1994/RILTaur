@@ -32,6 +32,13 @@ void TransitionToBound();
 void TransitionToRotate();
 void TransitionToHop();
 
+void TransitionToWaypoint();
+void resetTimeWP();
+void traverseCheck();
+bool checkTurn(float sp_angle, float& dist);
+void changeLegDirection(int legDirection[4]);
+void stop_state();
+
 
 enum States {
     STOP = 0,
@@ -46,7 +53,8 @@ enum States {
     ROTATE = 9,
     FLIP = 10,
     TURN_TROT = 11,
-    RESET_ = 12
+    RESET_ = 12,
+    WAYPOINT = 13
 };
 
 extern States state;
@@ -85,9 +93,18 @@ struct LegIdentifier{
     float gamma = 0.0;
 };
 
+struct Waypoints{
+    float x_angle = 0.0;
+    float distance = 0.0;
+    float y_angle = 0.0;
+    bool x_turnt = true;
+    bool distance_reached = true;
+    bool y_turnt = true;
+};
 
+extern struct Waypoints sp;
 extern struct MotorParams motor_params;
-extern struct GaitParams state_gait_params[13];
+extern struct GaitParams state_gait_params[14];
 extern struct LegGain gait_gains;
 
 #endif
