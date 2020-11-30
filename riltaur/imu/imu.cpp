@@ -1,5 +1,5 @@
 #include "imu.h"
-#include "PinNames.h"
+
 
 // These options are typically called CPOL and CPHA.
 // The BNO08X uses CPOL = 1 and CPHA = 1. In this configuration the clock idles high and data is captured on the
