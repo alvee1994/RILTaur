@@ -12,8 +12,8 @@ using namespace std::chrono;
 Timer t;
 Timer wt;
 
-static float p = 0;
-static float prev_t = 0;
+float p = 0;
+float prev_t = 0;
 
 unsigned long long time_ms;
 unsigned long long waypoint_time = 0.0;
@@ -62,6 +62,7 @@ void start_position_control(CAN& can_interface, struct LegIdentifier* legs) {
 void position_control_func() {
     t.start();
 
+
     while(true) {
         time_ms = duration_cast<milliseconds>(t.elapsed_time()).count(); // get the system time in milliseconds
         struct GaitParams gait_params = state_gait_params[state];
@@ -86,7 +87,7 @@ void position_control_func() {
             case WAYPOINT:
                 waypoint_time = duration_cast<milliseconds>(wt.elapsed_time()).count();
                 gait(legs_, gait_params, waypoint_time, 0.0, 0.5, 0.0, 0.5);
-                postion_16bit(*can_comm, legs_, 0.35);
+                postion_16bit(*can_comm, legs_, 0.0);
                 traverseCheck();
                 break;                
             case TURN_TROT:
@@ -270,7 +271,6 @@ void CoupledMoveLeg(float t, struct GaitParams params,
 * Sinusoidal trajectory generator function with flexibility from parameters described below. Can do 4-beat, 2-beat, trotting, etc with this.
 */
 void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& x, float& y) {
-
 
     float stanceHeight = params.stance_height;
     float downAMP = params.down_amp;
@@ -479,7 +479,7 @@ void resetTimeWP(){
 
 void traverseCheck(){
     float first_turn, distance_travelled, second_turn;
-    float d = p*0.075;
+    float d = p*0.15;
 
     
     if (sp.x_turnt == false){ // this is the first turn if any
@@ -489,7 +489,8 @@ void traverseCheck(){
             wait_us(500000);
         };
     } else if (sp.distance_reached == false){ // distance to move if any
-        printf("going forward %f metres\n", d);
+        // printf("going forward %f metres\n", d);
+        changeLegDirection(go_forward);
         sp.distance_reached = (d >= sp.distance) ? true : false;
         if (sp.distance_reached){
             resetTimeWP();
@@ -510,13 +511,13 @@ void traverseCheck(){
 bool checkTurn(float sp_angle, float& dist){
     if (sp_angle > 0.0){
             changeLegDirection(right_turn);
-            printf("turning right. ");
+            // printf("turning right. ");
     } else {
             changeLegDirection(left_turn);
-            printf("turning left. ");
+            // printf("turning left. ");
     } 
-    float turn = (dist*360)/(2 * PI * 0.1125);
-    printf("angle turnt is %f degrees\n", turn);
+    float turn = 0.2*(dist*360)/(2 * PI * 0.1125);
+    // printf("angle turnt is %f degrees\n", turn);
     bool result = (turn >= abs(sp_angle)) ? true : false;
     return result;
 }

@@ -1,6 +1,6 @@
 #ifndef SERIAL_COMMANDS_H
 #define SERIAL_COMMANDS_H
-
+#define USE_PC_SERIAL
 
 #include "mbed.h"
 #include "position_control.h"

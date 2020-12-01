@@ -1,6 +1,6 @@
 #include "all_libs.h"
 
-#define USE_PC_SERIAL
+
 
 // #include <iostream>
  
@@ -39,7 +39,7 @@ int main()
     //     {0.18, 0.03, 0.03, 0.5, 0.15, 1.5, 0.0}, // TROT
     // };
 
-    printf("\n\n=========================Started RILTaur=========================\n\n");
+    printf("started...\n");
 
     // motor mode and zero position
     // for (int i = 0; i<4; i++){
@@ -83,7 +83,7 @@ int main()
         send(can_one, legs[i].motorA, leg_modes.motor_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.motor_mode, 8);
 
-        printf("\tTurning on motors with IDs are %i, %i\n", legs[i].motorA, legs[i].motorB);
+        printf("IDs are %i, %i\n", legs[i].motorA, legs[i].motorB);
     }
 
     // for (int i=0; i < 4; i++) {

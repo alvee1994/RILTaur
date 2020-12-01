@@ -23,10 +23,10 @@ void serial_commands_func() {
     char msg[] = "!!!\n";
 
     while(true) {
-        while(pc.readable()) {
-            pc.read(c, sizeof(c));
+        while(SERIAL.readable()) {
+            SERIAL.read(c, sizeof(c));
             //pc.write(c, sizeof(c));
-            if (*c == ';' || *c == '\r') {
+            if (*c == ';' || *c == '\r' || *c == '\n') {
                 cmd[pos] = '\0';
                 InterpretCommand(cmd);
                 pos = 0;
@@ -43,14 +43,15 @@ void InterpretCommand(char* cmd) {
     float f;
     float initial_turn;
     float final_turn;
+    float distance;
     States temp_state = STOP;
     // Note: Putting a space in front of %c allows you type commands like:
     // f 2.0; l 0.01; h 0.08
     // int num_parsed = sscanf(cmd, " %c %c %f", &c, &s, &f);
-    int num_parsed = sscanf(cmd, " %c %c %f %f %f", &c, &s, &initial_turn, &f, &final_turn);
+    int num_parsed = sscanf(cmd, " %c %c %f %f %f %f", &c, &s, &f, &initial_turn, &distance, &final_turn);
     printf("%s", cmd);
     printf("\n");
-    printf("%c %c %f %f %f\n", c, s, final_turn, f, initial_turn);
+    printf("%c %c %f %f %f %f\n", c, s, f, initial_turn, distance, final_turn);
     if (num_parsed < 1) {
         printf("Invalid command\n");
         return;
@@ -141,8 +142,8 @@ void InterpretCommand(char* cmd) {
             break;
         case 'x':
             if (temp_state == WAYPOINT){
-                printf("For state %d \n\tturn %f degrees \n\t then go distance: %f \n\tand then turn: %f\n", temp_state, initial_turn, f, final_turn);
-                sp = {initial_turn, f, final_turn, false, false, false};
+                printf("For state %d \n\tturn %f degrees \n\t then go distance: %f \n\tand then turn: %f\n", temp_state, initial_turn, distance, final_turn);
+                sp = {initial_turn, distance, final_turn, false, false, false};
             }
             break;
         // Change leg gains
@@ -186,7 +187,7 @@ void InterpretCommand(char* cmd) {
             TransitionToTrot();
             printf("TROT\n");
             break;
-        // Switch into TROT state
+        // Switch into WAYPOINT state
         case 'L':
             TransitionToWaypoint();
             printf("WAYPOINT\n");
