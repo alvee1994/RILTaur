@@ -1,13 +1,16 @@
 #include "PinNames.h"
 #include "all_libs.h"
+#include <ios>
 
 
 
 // #include <iostream>
  
 Ticker ticker;
-
+// string thestring = "a string";
+// hash<string> somestring;
 // can interface
+
 CAN can_one(D10, D2);
 // float tff = 0;
 
@@ -18,7 +21,6 @@ struct LegModes leg_modes; // different modes of the motor
 int main()
 {
     printf("=============== Started RILtaur ===============\n");
-
     struct LegIdentifier legs[4] = {
         // Left leg
 

@@ -30,15 +30,15 @@ void start_imu_thread(){
 void imu_thread()
 {
     bool init_status = imu.imuInit_function();
-    ThisThread::sleep_for(100ms);
-    printf("Initiating IMU returned %i\n", init_status);
-    printf("Elapsed time: %.2fs\n", imuTime); //
-    printf("Calib Status : %d, %d \n", imu.imu_stabilized[0], imu.imu_stabilized[1]);
-    wait_us(200000);
+    if(init_status){
+        printf("\tIMU successfully initialized\n");
+    } else {
+        printf("\tIMU failed to initialize (non fatal)\n");
+    }
+    ThisThread::sleep_for(200ms);
     while(init_status) {
         imu.imuUpdate();
         imuTime = imu.time_s;
-        // wait_us(2.5);
         ThisThread::sleep_for(1ms);
         // printf("%.2f\n", imu.imu_BNO055.euler.yaw);
         // printf("Orientation (roll-pitch-yaw): (%.2f , %.2f , %.2f)\n", imu.Pose[0], imu.Pose[1], imu.Pose[2]);
@@ -90,7 +90,6 @@ bool IMU_BNO055::imuInit()
 //    Debug.printf("print imu check %d", imu_BNO055.check());
     wait_us(300000);
     if (imu_BNO055.check()) {
-        printf("imu_linked");
         //load default calib parameters
         offset_acc[0] =10;
         offset_acc[1] =509;

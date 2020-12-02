@@ -486,7 +486,7 @@ void traverseCheck(){
         if(checkTurn(sp.x_angle, d)){
             sp.x_turnt = true;
             resetTimeWP();
-            wait_us(500000);
+            ThisThread::sleep_for(500ms);
         };
     } else if (sp.distance_reached == false){ // distance to move if any
         // printf("going forward %f metres\n", d);
@@ -494,13 +494,13 @@ void traverseCheck(){
         sp.distance_reached = (d >= sp.distance) ? true : false;
         if (sp.distance_reached){
             resetTimeWP();
-            wait_us(500000);
+            ThisThread::sleep_for(500ms);
         }
     } else if (sp.y_turnt == false){ // last turn if any
         if(checkTurn(sp.y_angle, d)){
             sp.y_turnt = true;
             resetTimeWP();
-            wait_us(500000);
+            ThisThread::sleep_for(500ms);
         };
     } else {
         changeLegDirection(go_forward);
