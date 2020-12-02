@@ -1,7 +1,5 @@
 #include "all_libs.h"
 
-// #define USE_PC_SERIAL
-
 // #include <iostream>
  
 Ticker ticker;
@@ -67,21 +65,19 @@ int main()
         {-1, 6, 5, 0, 0.0, 0.0} // leg3
     };
 
-    PrintGaitCommands();
-    start_serial_commands();
-
     can_one.frequency(1000000);
 
 
     for (int i = 0; i<4; i++){
         send(can_one, legs[i].motorA, leg_modes.exit_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.exit_mode, 8);
-        wait_us(200000);
+        wait_us(500000);
         send(can_one, legs[i].motorA, leg_modes.zero_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.zero_mode, 8);
         wait_us(500000);
         send(can_one, legs[i].motorA, leg_modes.motor_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.motor_mode, 8);
+        wait_us(500000);
 
         printf("IDs are %i, %i\n", legs[i].motorA, legs[i].motorB);
     }
@@ -92,9 +88,12 @@ int main()
     //     wait_us(500000);
     // }
 
-    wait_us(5000000);
+    wait_us(500000);
 
     start_position_control(can_one, legs);
+
+    PrintGaitCommands();
+    start_serial_commands(legs);
 
     while(true){
         // unsigned long long time_ms = duration_cast<milliseconds>(t.elapsed_time()).count(); // get the system time in milliseconds

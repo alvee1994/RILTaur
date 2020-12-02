@@ -1,5 +1,6 @@
 #include "serial_commands.h"
 
+
 #if defined(USE_PC_SERIAL)
     #define SERIAL pc
 #else
@@ -10,8 +11,9 @@ Thread serial_commands_thread;
 static BufferedSerial s1(PA_9, PA_10, 115200);
 static BufferedSerial pc(USBTX,USBRX, 115200);
 
-void start_serial_commands() {
+void start_serial_commands(struct LegIdentifier* legs) {
     serial_commands_thread.start(serial_commands_func);
+    legs_ = legs;
 }
 
 void serial_commands_func() {
@@ -25,8 +27,8 @@ void serial_commands_func() {
     while(true) {
         while(SERIAL.readable()) {
             SERIAL.read(c, sizeof(c));
-            //pc.write(c, sizeof(c));
-            if (*c == ';' || *c == '\r') {
+            //Spc.write(c, sizeof(c));
+            if (*c == ';' || *c == '\n' || *c == '\r') {
                 cmd[pos] = '\0';
                 InterpretCommand(cmd);
                 pos = 0;
@@ -125,9 +127,14 @@ void InterpretCommand(char* cmd) {
             state_gait_params[temp_state].flight_percent = f;
             break;
         case 'r':
+            for (int i = 0; i < 4; i++) legs_[i].straight_dir = (int) f;
             printf("Set state %d straight dir. to: %f\n", temp_state, f);
             break;
         case 't':
+            legs_[0].straight_dir = (int) f;
+            legs_[1].straight_dir = (int) f;
+            legs_[2].straight_dir = (int) -f;
+            legs_[3].straight_dir = (int) -f;
             printf("Set state %d turn dir. to: %f\n", temp_state, f);
             break;
         // Change leg gains

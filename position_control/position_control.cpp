@@ -36,6 +36,8 @@ long rotate_start = 0; // milliseconds when rotate was commanded
 States state = STOP;
 int straight_dir = 1;
 int turn_dir = 1;
+int left_dir = 1;
+int right_dir = 1;
 /*----------------------------------------------------------------*/
 
 void start_position_control(CAN& can_interface, struct LegIdentifier* legs) {
@@ -90,15 +92,15 @@ void position_control_func() {
                 break;
             case TROT:
                 gait(legs_, gait_params, time_ms, 0.0, 0.5, 0.0, 0.5);
-                postion_16bit(*can_comm, legs_, 0.35);
+                postion_16bit(*can_comm, legs_, 0);
                 break;
             case TURN_TROT:
                 gait(legs_, gait_params, time_ms, 0.0, 0.5, 0.0, 0.5);
-                postion_16bit(*can_comm, legs_, 0.35);
+                postion_16bit(*can_comm, legs_, 0);
                 break;
             case WALK:
                 gait(legs_, gait_params, time_ms, 0.0, 0.25, 0.75, 0.5);
-                postion_16bit(*can_comm, legs_, 0.35);
+                postion_16bit(*can_comm, legs_, 0);
                 break;
             case PRONK:
                 //gait(gait_params, 0.0, 0.0, 0.0, 0.0, gait_gains);
@@ -107,14 +109,17 @@ void position_control_func() {
                 //ExecuteJump();
                 break;
             case ROTATE:
-                {
-                float theta,gamma;
-                CartesianToThetaGamma(0, 0.24, 1.0, theta, gamma);
-                float freq = 0.1;
-                float phase = freq * (time_ms - rotate_start)/1000.0f;
-                theta = (-cos(2*PI * phase) + 1.0f) * 0.5 * 2 * PI;
-                //CommandAllLegs(theta, gamma, gait_gains);
-                }
+                // {
+                // float theta,gamma;
+                // CartesianToThetaGamma(0, 0.24, 1.0, theta, gamma);
+                // float freq = 0.1;
+                // float phase = freq * (time_ms - rotate_start)/1000.0f;
+                // theta = (-cos(2*PI * phase) + 1.0f) * 0.5 * 2 * PI;
+                // //CommandAllLegs(theta, gamma, gait_gains);
+                // }
+                gait(legs_, gait_params, time_ms, 0.0, 0.5, 0.0, 0.5);
+                postion_16bit(*can_comm, legs_, 0);
+                break;
             case HOP:
                 //hop(gait_params);
                 break;
@@ -224,19 +229,23 @@ void gait(struct LegIdentifier legs_[],
 
     float t = time_ms/1000.0;
 
-    const float leg0_direction = legs_[0].leg_direction;
+    const float leg0_direction = legs_[0].leg_direction * legs_[0].straight_dir;
+    // const float leg0_direction = legs_[0].leg_direction;
     CoupledMoveLeg(t, paramsL, leg0_offset, leg0_direction,
         legs_[0].theta, legs_[0].gamma);
 
-    const float leg1_direction = legs_[1].leg_direction;
+    const float leg1_direction = legs_[1].leg_direction * legs_[1].straight_dir;
+    // const float leg1_direction = legs_[1].leg_direction;
     CoupledMoveLeg(t, paramsL, leg1_offset, leg1_direction,
         legs_[1].theta, legs_[1].gamma);
 
-    const float leg2_direction = legs_[2].leg_direction;
+    const float leg2_direction = legs_[2].leg_direction * legs_[2].straight_dir;
+    // const float leg2_direction = legs_[2].leg_direction;
     CoupledMoveLeg(t, paramsR, leg2_offset, leg2_direction,
         legs_[2].theta, legs_[2].gamma);
 
-    const float leg3_direction = legs_[3].leg_direction;
+    const float leg3_direction = legs_[3].leg_direction * legs_[3].straight_dir;
+    // const float leg3_direction = legs_[3].leg_direction;
     CoupledMoveLeg(t, paramsR, leg3_offset, leg3_direction,
         legs_[3].theta, legs_[3].gamma);
     // wait_us(100000);
@@ -273,6 +282,7 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
     prev_t = t;
 
     float gp = fmod((p+gaitOffset),1.0); // mod(a,m) returns remainder division of a by m
+    // printf("gp is %f\n", gp);
     if (gp <= flightPercent) {
         x = ((gp/flightPercent)*stepLength) - stepLength/2.0;
         y = -upAMP*sin(PI*gp/flightPercent) + stanceHeight;
