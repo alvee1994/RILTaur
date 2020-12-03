@@ -91,6 +91,7 @@ struct LegIdentifier{
     float tff = 0.0;
     float theta = 0.0;
     float gamma = 0.0;
+    int multiplier = 1;
 };
 
 struct Waypoints{

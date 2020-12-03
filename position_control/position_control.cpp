@@ -42,15 +42,15 @@ struct GaitParams state_gait_params[] = {
 
 struct Waypoints sp = {0.0, 0.0, 0.0};
 
-int right_turn[4] = {1, 1, 1, 1};
-int left_turn[4] = {-1, -1, -1, -1};
-int go_forward[4] = {1, 1, -1, -1};
+// array of multipliers to change the direction of movement later
+int right_turn[4] = {1, 1, -1, -1};
+int left_turn[4] = {-1, -1, 1, 1};
+int go_forward[4] = {1, 1, 1, 1};
+int go_backward[4] = {-1, -1, -1, -1};
 
 
 long rotate_start = 0; // milliseconds when rotate was commanded
 States state = STOP;
-int straight_dir = 1;
-int turn_dir = 1;
 /*----------------------------------------------------------------*/
 
 void start_position_control(CAN& can_interface, struct LegIdentifier* legs) {
@@ -130,7 +130,6 @@ void position_control_func() {
 }
 
 void stop_state(){
-    LegGain stop_gain = {50, 0.5, 50, 0.5};
     float y1 = 0.15;
     float y2 = 0.15;
     int kp = 60;
@@ -141,21 +140,6 @@ void stop_state(){
         transmit(*can_comm, legs_[i].motorA, 32767, 2047, kp, kd, 2047);
         transmit(*can_comm, legs_[i].motorB, 32767, 2047, kp, kd, 2047);
     }
-
-        // CartesianToThetaGamma(0.0, y2, legs_[0].leg_direction, legs_[0].theta, legs_[0].gamma);
-        // CartesianToThetaGamma(0.0, y1, legs_[1].leg_direction, legs_[1].theta, legs_[1].gamma);
-        // CartesianToThetaGamma(0.0, y1, legs_[2].leg_direction, legs_[2].theta, legs_[2].gamma);
-        // CartesianToThetaGamma(0.0, y2, legs_[3].leg_direction, legs_[3].theta, legs_[3].gamma);
-        
-        // postion_16bit(can_comm, legs_, 0.35);
-        //transmit(can_comm, legs_[0].motorA, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[0].motorB, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[1].motorA, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[1].motorB, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[2].motorA, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[2].motorB, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[3].motorA, 32767, 2047, kp, kd, 2047);
-        // transmit(can_comm, legs_[3].motorB, 32767, 2047, kp, kd, 2047);
 }
 
 void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay){
@@ -170,8 +154,6 @@ void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay
             alpha = ((-1*legs_[i].gamma) - legs_[i].theta) + PI/2.0; 
             beta = ((-1*legs_[i].gamma) + legs_[i].theta) + PI/2.0;
         }
-
-        int received[2];
 
         int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
         int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
@@ -239,19 +221,21 @@ void gait(struct LegIdentifier legs_[],
 
     float t = time_ms/1000.0;
 
-    const float leg0_direction = legs_[0].leg_direction;
+
+    // use the function changeLegDirection to change the direction of locomotion
+    const float leg0_direction = legs_[0].leg_direction * legs_[0].multiplier;
     CoupledMoveLeg(t, paramsL, leg0_offset, leg0_direction,
         legs_[0].theta, legs_[0].gamma);
 
-    const float leg1_direction = legs_[1].leg_direction;
+    const float leg1_direction = legs_[1].leg_direction * legs_[0].multiplier;
     CoupledMoveLeg(t, paramsL, leg1_offset, leg1_direction,
         legs_[1].theta, legs_[1].gamma);
 
-    const float leg2_direction = legs_[2].leg_direction;
+    const float leg2_direction = legs_[2].leg_direction * legs_[0].multiplier;
     CoupledMoveLeg(t, paramsR, leg2_offset, leg2_direction,
         legs_[2].theta, legs_[2].gamma);
 
-    const float leg3_direction = legs_[3].leg_direction;
+    const float leg3_direction = legs_[3].leg_direction * legs_[0].multiplier;
     CoupledMoveLeg(t, paramsR, leg3_offset, leg3_direction,
         legs_[3].theta, legs_[3].gamma);
     // wait_us(100000);
@@ -478,10 +462,8 @@ void resetTimeWP(){
 }
 
 void traverseCheck(){
-    float first_turn, distance_travelled, second_turn;
     float d = p*0.15;
-
-    
+  
     if (sp.x_turnt == false){ // this is the first turn if any
         if(checkTurn(sp.x_angle, d)){
             sp.x_turnt = true;
@@ -524,7 +506,7 @@ bool checkTurn(float sp_angle, float& dist){
 
 void changeLegDirection(int legDirection[4]){
     for (int i = 0; i < 4; i++){
-        legs_[i].leg_direction = legDirection[i];
+        legs_[i].multiplier = legDirection[i];
         // printf("%i", legs_[i].leg_direction);
     }
     // printf("\n");

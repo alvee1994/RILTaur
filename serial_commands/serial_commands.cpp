@@ -10,8 +10,9 @@ Thread serial_commands_thread;
 static BufferedSerial s1(PA_9, PA_10, 115200);
 static BufferedSerial pc(USBTX,USBRX, 115200);
 
-void start_serial_commands() {
+void start_serial_commands(struct LegIdentifier* legs) {
     serial_commands_thread.start(serial_commands_func);
+    legs_ = legs;
 }
 
 void serial_commands_func() {
@@ -25,8 +26,8 @@ void serial_commands_func() {
     while(true) {
         while(SERIAL.readable()) {
             SERIAL.read(c, sizeof(c));
-            //pc.write(c, sizeof(c));
-            if (*c == ';' || *c == '\r' || *c == '\n') {
+            //Spc.write(c, sizeof(c));
+            if (*c == ';' || *c == '\n' || *c == '\r') {
                 cmd[pos] = '\0';
                 InterpretCommand(cmd);
                 pos = 0;
@@ -40,18 +41,18 @@ void serial_commands_func() {
 void InterpretCommand(char* cmd) {
     char c;
     char s;
-    float f;
-    float initial_turn;
+    float f; // for waypoint, the value for this is the initial turn
+    // float initial_turn;
     float final_turn;
     float distance;
     States temp_state = STOP;
     // Note: Putting a space in front of %c allows you type commands like:
     // f 2.0; l 0.01; h 0.08
     // int num_parsed = sscanf(cmd, " %c %c %f", &c, &s, &f);
-    int num_parsed = sscanf(cmd, " %c %c %f %f %f %f", &c, &s, &f, &initial_turn, &distance, &final_turn);
+    int num_parsed = sscanf(cmd, " %c %c %f %f %f", &c, &s, &f, &distance, &final_turn);
     printf("%s", cmd);
     printf("\n");
-    printf("%c %c %f %f %f %f\n", c, s, f, initial_turn, distance, final_turn);
+    printf("received %c %c %f %f %f\n", c, s, f, distance, final_turn);
     if (num_parsed < 1) {
         printf("Invalid command\n");
         return;
@@ -135,15 +136,26 @@ void InterpretCommand(char* cmd) {
             state_gait_params[temp_state].flight_percent = f;
             break;
         case 'r':
+            /*
+                -1 is back
+                1 is forward
+            */
+            for (int i = 0; i < 4; i++) legs_[i].multiplier = (int) f;
             printf("Set state %d straight dir. to: %f\n", temp_state, f);
             break;
         case 't':
+            /*
+                -1 is left
+                1 is right
+            */
+            for (int i = 0; i < 2; i++) legs_[i].multiplier = (int) f;
+            for (int i = 2; i < 4; i++) legs_[i].multiplier = (int) -f;
             printf("Set state %d turn dir. to: %f\n", temp_state, f);
             break;
         case 'x':
             if (temp_state == WAYPOINT){
-                printf("For state %d \n\tturn %f degrees \n\t then go distance: %f \n\tand then turn: %f\n", temp_state, initial_turn, distance, final_turn);
-                sp = {initial_turn, distance, final_turn, false, false, false};
+                printf("For state %d \n\tturn %f degrees \n\t then go distance: %f \n\tand then turn: %f\n", temp_state, f, distance, final_turn);
+                sp = {f, distance, final_turn, false, false, false};
             }
             break;
         // Change leg gains
