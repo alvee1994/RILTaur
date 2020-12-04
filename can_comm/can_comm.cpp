@@ -64,12 +64,13 @@ void transmit(CAN& can_interface, uint8_t can_id, int position, int velocity, in
     // printf("kd %d\n", (msg.data[5]<<4|msg.data[6]>>4));
     // printf("ff %d\n\n", ((msg.data[6]&0xf)<<8|msg.data[7]));
 
+
+
     send(can_interface, can_id, msg.data, 8);
 
 
-    // int p_int = (msg.data[0]<<8|msg.data[1]);
-    // float p_float = uint_to_float(int (p_int), -95.0f, +95.0f, 16);
-    // printf("pos is p_int %i\n", p_int);
+    // int v_int = (msg.data[2]<<4|msg.data[3]>>4);
+    // printf("%i", velocity == v_int);
 }
 
 int float_to_uint(float x, float x_min, float x_max, int bits){
@@ -77,6 +78,7 @@ int float_to_uint(float x, float x_min, float x_max, int bits){
     float span = x_max - x_min;
     float offset = x_min;
     return (int) ((x-offset)*((float)((1<<bits)-1))/span);
+    
     }
     
     

@@ -13,6 +13,7 @@
 void start_position_control(CAN& can_interface, struct LegIdentifier* legs);
 void position_control_func();
 void postion_16bit(CAN& can_interface, struct LegIdentifier legs[], float delay);
+void oneLeg(CAN& can_interface, struct LegIdentifier legs[], float delay);
 void GetGamma(float L, float theta, float& gamma);
 void LegParamsToCartesian(float L, float theta, float& x, float& y);
 void CartesianToLegParams(float x, float y, float leg_direction, float& L, float& theta);

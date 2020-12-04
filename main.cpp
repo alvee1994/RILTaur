@@ -27,12 +27,12 @@ int main()
         // Left leg
 
         // leg direction, ma, mb, feed forward, tff, theta, gamma
-        {1, 4, 3, 0, 0.0, 0.0}, // leg0
-        {1, 2, 1, 0, 0.0, 0.0}, // leg1
+        {1, 3, 4, 0, 0.0, 0.0}, // leg0
+        {1, 1, 2, 0, 0.0, 0.0}, // leg1
 
         // Right leg
-        {-1, 8, 7, 0, 0.0, 0.0}, // leg2
-        {-1, 6, 5, 0, 0.0, 0.0} // leg3
+        {-1, 7, 8, 0, 0.0, 0.0}, // leg2
+        {-1, 5, 6, 0, 0.0, 0.0} // leg3
     };
 
     can_one.frequency(1000000);
@@ -41,13 +41,13 @@ int main()
     for (int i = 0; i<4; i++){
         send(can_one, legs[i].motorA, leg_modes.exit_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.exit_mode, 8);
-        wait_us(500000);
+        // wait_us(500000);
         send(can_one, legs[i].motorA, leg_modes.zero_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.zero_mode, 8);
-        wait_us(500000);
+        // wait_us(500000);
         send(can_one, legs[i].motorA, leg_modes.motor_mode, 8);
         send(can_one, legs[i].motorB, leg_modes.motor_mode, 8);
-        wait_us(500000);
+        // wait_us(500000);
 
         printf("IDs are %i, %i\n", legs[i].motorA, legs[i].motorB);
     }

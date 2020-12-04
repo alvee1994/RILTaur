@@ -1,4 +1,5 @@
 #include "position_control.h"
+#include "ThisThread.h"
 #include <cstdio>
 #include <iterator>
 
@@ -160,13 +161,40 @@ void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay
 
         int kp = 60;
         int kd = 400;
-
+        
         transmit(can_interface, legs_[i].motorA, motorA_pos, 2047, kp, kd, 2047 - legs_[i].tff);
         transmit(can_interface, legs_[i].motorB, motorB_pos, 2047, kp, kd, 2047 + legs_[i].tff);
         
         ThisThread::sleep_for(delay);
         
     }
+};
+
+void oneLeg(int i, float _x, float _y){
+        // i is the ID of the leg: 0, 1, 2 ,3
+        float alpha;
+        float beta;
+
+        if (i == 0 || i == 2) {
+            CartesianToThetaGamma(_x, _y, legs_[i].leg_direction, legs_[i].theta, legs_[i].gamma);
+            ThisThread::sleep_for(1ms);
+            alpha = (legs_[i].gamma - legs_[i].theta) - PI/2.0; 
+            beta = (legs_[i].gamma + legs_[i].theta) - PI/2.0;
+        } else {
+            CartesianToThetaGamma(_x, _y, legs_[i].leg_direction, legs_[i].theta, legs_[i].gamma);
+            ThisThread::sleep_for(1ms);
+            alpha = ((-1*legs_[i].gamma) - legs_[i].theta) + PI/2.0; 
+            beta = ((-1*legs_[i].gamma) + legs_[i].theta) + PI/2.0;
+        }
+
+        int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
+        int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
+
+        int kp = 60;
+        int kd = 400;
+
+        transmit(*can_comm, legs_[i].motorA, motorA_pos, 2047, kp, kd, 2047 - legs_[i].tff);
+        transmit(*can_comm, legs_[i].motorB, motorB_pos, 2047, kp, kd, 2047 + legs_[i].tff);
 };
 
 bool IsValidGaitParams(struct GaitParams params) {
@@ -316,7 +344,7 @@ void GetGamma(float L, float theta, float& gamma) {
         gamma = 0;
         printf("\nERROR: L is too large to find valid alpha and beta!");
       } else {
-        gamma = acos(cos_param);
+        gamma = PI - acos(cos_param);
       }
 }
 
