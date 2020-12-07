@@ -2,18 +2,10 @@
 #include "all_libs.h"
 #include "imuHandler.h"
 #include <ios>
-
-
-
-// #include <iostream>
  
 Ticker ticker;
-// string thestring = "a string";
-// hash<string> somestring;
-// can interface
 
 CAN can_one(D10, D2);
-// float tff = 0;
 
 struct LegModes leg_modes; // different modes of the motor
 
@@ -26,13 +18,13 @@ int main()
     struct LegIdentifier legs[4] = {
         // Left leg
 
-        // leg direction, ma, mb, feed forward, tff, theta, gamma
-        {1, 3, 4, 0, 0.0, 0.0}, // leg0
-        {1, 1, 2, 0, 0.0, 0.0}, // leg1
+        // leg direction, ma, mb,  tff, theta, gamma, multiplier
+        {       1       ,  3,  4,   0 ,  0.0 ,  0.0 ,     1     }, // leg0
+        {       1       , 10,  2,   0 ,  0.0 ,  0.0 ,     1     }, // leg1
 
         // Right leg
-        {-1, 7, 8, 0, 0.0, 0.0}, // leg2
-        {-1, 5, 6, 0, 0.0, 0.0} // leg3
+        {      -1       ,  7,  8,   0 ,  0.0 ,  0.0 ,     1     }, // leg2
+        {      -1       ,  5,  6,   0 ,  0.0 ,  0.0 ,     1     } // leg3
     };
 
     can_one.frequency(1000000);
