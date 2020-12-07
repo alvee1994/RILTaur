@@ -57,12 +57,12 @@ int main()
         // Left leg
 
         // leg direction, ma, mb, feed forward, tff, theta, gamma
-        {1, 4, 3, 0, 0.0, 0.0}, // leg0
-        {1, 2, 1, 0, 0.0, 0.0}, // leg1
+        {1, 3, 4, 0, 0.0, 0.0}, // leg0
+        {1, 10, 2, 0, 0.0, 0.0}, // leg1
 
         // Right leg
-        {-1, 8, 7, 0, 0.0, 0.0}, // leg2
-        {-1, 6, 5, 0, 0.0, 0.0} // leg3
+        {-1, 7, 8, 0, 0.0, 0.0}, // leg2
+        {-1, 5, 6, 0, 0.0, 0.0} // leg3
     };
 
     can_one.frequency(1000000);

@@ -64,7 +64,7 @@ void position_control_func() {
                     int kd = 400;
 
                     for (int i=0; i < 4; i++) {
-                        CartesianToThetaGamma(0.0, y1, legs_[i].leg_direction, legs_[i].theta, legs_[i].gamma);
+                        // CartesianToThetaGamma(0.0, y1, legs_[i].leg_direction, legs_[i].theta, legs_[i].gamma);
                         transmit(*can_comm, legs_[i].motorA, 32767, 2047, kp, kd, 2047);
                         transmit(*can_comm, legs_[i].motorB, 32767, 2047, kp, kd, 2047);
                     }
@@ -160,8 +160,10 @@ void postion_16bit(CAN& can_interface, struct LegIdentifier legs_[], float delay
 
 
 
-        int motorA_pos = float_to_uint(alpha, -95.5, 95.5, 16);
-        int motorB_pos = float_to_uint(beta, -95.5, 95.5, 16);
+        int motorA_pos = float_to_uint(alpha, -95.5f, 95.5f, 16);
+        int motorB_pos = float_to_uint(beta, -95.5f, 95.5f, 16);
+
+        // if (i==0) printf("%s%u,%s%u\n",(motorA_pos<0.0?"-":""),motorA_pos,(motorB_pos<0.0?"-":""),motorB_pos);
 
         // int motorA_pos = float_to_uint(int(alpha*10)/10, -95.5, 95.5, 16);
         // int motorB_pos = float_to_uint(int(beta*10)/10, -95.5, 95.5, 16);
@@ -256,6 +258,7 @@ void CoupledMoveLeg(float t, struct GaitParams params,
                     float& theta, float& gamma) {
     float x; // float x for leg 0 to be set by the sin trajectory
     float y;
+    // printf("In coupledmoveleg\n");
     SinTrajectory(t, params, gait_offset, x, y);
     CartesianToThetaGamma(x, y, leg_direction, theta, gamma);
     // SetCoupledPosition(theta, gamma, gains);
@@ -265,6 +268,7 @@ void CoupledMoveLeg(float t, struct GaitParams params,
 * Sinusoidal trajectory generator function with flexibility from parameters described below. Can do 4-beat, 2-beat, trotting, etc with this.
 */
 void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& x, float& y) {
+    // printf("In sintraj\n");
     static float p = 0;
     static float prev_t = 0;
 
@@ -293,7 +297,8 @@ void SinTrajectory (float t, struct GaitParams params, float gaitOffset, float& 
         y = downAMP*sin(PI*percentBack) + stanceHeight;
     }
 
-    // printf("%i,%i\n", int(x*100), int(y*100));
+
+    // printf("%s%f,%f\n", (x<0.0?"-":""), x, y);
     
 
     
@@ -303,6 +308,7 @@ void CartesianToThetaGamma(float x, float y, float leg_direction, float& theta, 
     float L = 0.0;
     CartesianToLegParams(x, y, leg_direction, L, theta);
     GetGamma(L, theta, gamma);
+    // printf("%f,%s%f,%f\n",L,(theta<0.0?"-":""),theta,gamma);
     //Serial << "Th, Gam: " << theta << " " << gamma << '\n';
 }
 
@@ -328,7 +334,7 @@ void GetGamma(float L, float theta, float& gamma) {
         gamma = 0;
         printf("\nERROR: L is too large to find valid alpha and beta!");
       } else {
-        gamma = acos(cos_param);
+        gamma = PI - acos(cos_param);
       }
 }
 

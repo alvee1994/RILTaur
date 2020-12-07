@@ -8,10 +8,11 @@
 #endif
 
 Thread serial_commands_thread;
-static BufferedSerial s1(PA_9, PA_10, 115200);
+static BufferedSerial s1(PA_9, PA_10, 19200);
 static BufferedSerial pc(USBTX,USBRX, 115200);
 
 void start_serial_commands(struct LegIdentifier* legs) {
+    s1.set_format(8,BufferedSerial::Even,1);
     serial_commands_thread.start(serial_commands_func);
     legs_ = legs;
 }
